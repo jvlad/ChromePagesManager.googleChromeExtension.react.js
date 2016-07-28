@@ -2335,30 +2335,83 @@ module.exports = React.createClass({displayName: 'exports',
 
 },{"./string_spanner":7}],11:[function(require,module,exports){
 /** @jsx React.DOM */var TabItem = require('./tab_item.jsx');
+var tabBroker = require('./tab_broker')(chrome);
+var stringScore = require('../../../lib/string_score');
+var tabFilter = require('./tab_filter')(stringScore);
 
 const LIST_WIDTH = 300;
 
 module.exports = React.createClass({displayName: 'exports',
+  getInitialState: function() {
+    return {
+      tabs: []
+    }
+  },
+
+  componentDidMount: function() {
+    this.refreshTabs();
+    this.setState({tabs: this.filteredTabs()});
+  },
+  
   render: function() {
     return (
       /* jshint ignore:start */
       React.DOM.div(null, 
-        React.DOM.p({className: "listName", style: this.getListNameStyle(this.props.listIndex)}, this.props.name), 
-        React.DOM.ul({ref: "listContent", style: this.getListContentStyle(this.props.listIndex)}, 
-          this.props.tabs.map(function(tab, i) {
-            return TabItem({tab: tab, key: tab.id, filter: this.props.filter, 
-              selected: this.props.selectedTab === tab, 
-              changeSelected: this.props.changeSelected, 
-              activateSelected: this.props.activateSelected, 
-              closeSelected: this.props.closeSelected, 
-              containerScrollTop: this.getScrollTop(), 
-              containerHeight: this.getHeight(), 
-              setContainerScrollTop: this.setScrollTop});
-          }.bind(this))
+        React.DOM.p({className: "listName", 
+           style: this.getListNameStyle(this.props.listIndex)}, this.props.name), 
+
+        React.DOM.ul({ref: "listContent", 
+            style: this.getListContentStyle(this.props.listIndex)}, 
+            this.state.tabs.map(function(tab, i) {
+              return TabItem({
+                tab: tab, 
+                key: tab.id, 
+                filter: this.props.filter, 
+                selected: this.props.selectedTab === tab, 
+                changeSelected: this.props.changeSelected, 
+                activateSelected: this.props.activateSelected, 
+                closeSelected: this.props.closeSelected, 
+                containerScrollTop: this.getScrollTop(), 
+                containerHeight: this.getHeight(), 
+                setContainerScrollTop: this.setScrollTop});
+            }.bind(this))
         )
         )
       /* jshint ignore:end */
     );
+  },
+
+  refreshTabs: function() {
+    tabBroker.query(this.props.searchAllWindows)
+      .then(function(tabs) {
+        this.setState({tabs: tabs, selected: null});
+      }.bind(this));
+  },
+
+  // We're calculating this on the fly each time instead of caching
+  // it in the state because it is very much fast enough, and
+  // simplifies some race-y areas of the component's lifecycle.
+  filteredTabs: function() {
+    if (this.props.filter.trim().length) {
+      return tabFilter(this.state.filter, this.state.tabs)
+        .map(function(result) {
+          return result.tab;
+        });
+    } else {
+      return this.state.tabs;
+    }
+  },
+
+  modifySelected: function(change) {
+    var filteredTabs = this.filteredTabs();
+    if (!filteredTabs.length) return;
+
+    var currentIndex = filteredTabs.indexOf(this.getSelected());
+    var newIndex = currentIndex + change;
+    if (newIndex < 0) return false;
+    if (newIndex >= filteredTabs.length) return false;
+    var newTab = filteredTabs[newIndex];
+    return true;
   },
 
   getLeftOffset: function (listIndex) {
@@ -2403,7 +2456,7 @@ module.exports = React.createClass({displayName: 'exports',
     this.refs.listContent.getDOMNode().scrollTop = val;
   }
 });
-},{"./tab_item.jsx":10}],12:[function(require,module,exports){
+},{"../../../lib/string_score":1,"./tab_broker":8,"./tab_filter":9,"./tab_item.jsx":10}],12:[function(require,module,exports){
 /** @jsx React.DOM */var KeybindMixin = require('./keybind_mixin');
 
 module.exports = React.createClass({displayName: 'exports',
@@ -2447,9 +2500,7 @@ module.exports = React.createClass({displayName: 'exports',
 });
 
 },{"./keybind_mixin":5}],13:[function(require,module,exports){
-/** @jsx React.DOM */var stringScore = require('../../../lib/string_score');
-var tabBroker = require('./tab_broker')(chrome);
-var tabFilter = require('./tab_filter')(stringScore);
+/** @jsx React.DOM */var tabBroker = require('./tab_broker')(chrome);
 
 var TabSearchBox = require('./tab_search_box.jsx');
 var TabList = require('./tab_list.jsx');
@@ -2467,20 +2518,18 @@ module.exports = React.createClass({displayName: 'exports',
     }
 
     return {
+      //todo if there is saved filterState in the local storage, selectAll (keep cursor next to the end of filter input string) in the input area on tabSwitcher invoked
       filter: '',
       selected: null,
-      tabs: [],
       searchAllWindows: searchAllWindows
     };
   },
 
   componentDidMount: function() {
     window.onblur = this.close;
-    this.refreshTabs();
   },
 
   render: function() {
-    
     return (
       /* jshint ignore:start */
       React.DOM.div(null, 
@@ -2488,59 +2537,23 @@ module.exports = React.createClass({displayName: 'exports',
           filter: this.state.filter, 
           exit: this.close, 
           changeFilter: this.changeFilter, 
-          activateSelected: this.activateSelected, 
-          modifySelected: this.modifySelected, 
-          closeSelected: this.closeSelected}), 
+          activateSelected: this.activateSelected}
+        ), 
         TabList({
           listIndex: 0, 
           name: "Open Tabs", 
-          tabs: this.filteredTabs(), 
           filter: this.state.filter, 
           selectedTab: this.getSelected(), 
           changeSelected: this.changeSelected, 
           activateSelected: this.activateSelected, 
-          closeSelected: this.closeSelected}), 
-        TabList({
-          listIndex: 1, 
-          name: "Bookmarks", 
-          tabs: this.filteredTabs(), 
-          filter: this.state.filter, 
-          selectedTab: this.getSelected(), 
-          changeSelected: this.changeSelected, 
-          activateSelected: this.activateSelected, 
-          closeSelected: this.closeSelected})
+          searchAllWindows: this.state.searchAllWindows})
       )
       /* jshint ignore:end */
     );
   },
 
-  getTabNames: function () {
-    return ["Open Tabs", "BookMarks"]
-  },
-
-  refreshTabs: function() {
-    tabBroker.query(this.state.searchAllWindows)
-    .then(function(tabs) {
-      this.setState({tabs: tabs, selected: null});
-    }.bind(this));
-  },
-
-  // We're calculating this on the fly each time instead of caching
-  // it in the state because it is very much fast enough, and
-  // simplifies some race-y areas of the component's lifecycle.
-  filteredTabs: function() {
-    if (this.state.filter.trim().length) {
-      return tabFilter(this.state.filter, this.state.tabs)
-      .map(function(result) {
-        return result.tab;
-      });
-    } else {
-      return this.state.tabs;
-    }
-  },
-
   getSelected: function() {
-    return this.state.selected || this.filteredTabs()[0];
+    return this.state.selected;
   },
 
   activateSelected: function() {
@@ -2551,43 +2564,14 @@ module.exports = React.createClass({displayName: 'exports',
     }
   },
 
-  closeSelected: function() {
-    /* jshint expr: true */
-    var selected = this.getSelected();
-    var index = this.state.tabs.indexOf(selected);
-
-    if (selected) {
-      this.modifySelected(1) || this.modifySelected(-1);
-    }
-
-    if (index > -1) {
-      var tabs = this.state.tabs;
-      tabs.splice(index, 1);
-      this.setState({tabs: tabs});
-    }
-
-    tabBroker.close(selected);
-  },
-
   changeFilter: function(newFilter) {
     this.setState({filter: newFilter, selected: null});
+    //todo save filter state to LocalStorage
   },
 
+  //todo rename to setSelected
   changeSelected: function(tab) {
     this.setState({selected: tab});
-  },
-
-  modifySelected: function(change) {
-    var filteredTabs = this.filteredTabs();
-    if (!filteredTabs.length) return;
-
-    var currentIndex = filteredTabs.indexOf(this.getSelected());
-    var newIndex = currentIndex + change;
-    if (newIndex < 0) return false;
-    if (newIndex >= filteredTabs.length) return false;
-    var newTab = filteredTabs[newIndex];
-    this.changeSelected(newTab);
-    return true;
   },
 
   changeSearchAllWindows: function(value) {
@@ -2601,7 +2585,7 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"../../../lib/string_score":1,"./status_bar.jsx":6,"./tab_broker":8,"./tab_filter":9,"./tab_list.jsx":11,"./tab_search_box.jsx":12}],14:[function(require,module,exports){
+},{"./status_bar.jsx":6,"./tab_broker":8,"./tab_list.jsx":11,"./tab_search_box.jsx":12}],14:[function(require,module,exports){
 var Q = require('q');
 
 module.exports = {
