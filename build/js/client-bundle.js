@@ -2336,11 +2336,15 @@ module.exports = React.createClass({displayName: 'exports',
 },{"./string_spanner":7}],11:[function(require,module,exports){
 /** @jsx React.DOM */var TabItem = require('./tab_item.jsx');
 
+const LIST_WIDTH = 300;
+
 module.exports = React.createClass({displayName: 'exports',
   render: function() {
     return (
       /* jshint ignore:start */
-        React.DOM.ul({style: this.getStyle(this.props.listIndex)}, 
+      React.DOM.div(null, 
+        React.DOM.p({className: "listName", style: this.getListNameStyle(this.props.listIndex)}, this.props.name), 
+        React.DOM.ul({ref: "listContent", style: this.getListContentStyle(this.props.listIndex)}, 
           this.props.tabs.map(function(tab, i) {
             return TabItem({tab: tab, key: tab.id, filter: this.props.filter, 
               selected: this.props.selectedTab === tab, 
@@ -2352,17 +2356,26 @@ module.exports = React.createClass({displayName: 'exports',
               setContainerScrollTop: this.setScrollTop});
           }.bind(this))
         )
+        )
       /* jshint ignore:end */
     );
   },
 
-  getStyle: function (listIndex) {
-    const LIST_WIDTH = 300;
+  getLeftOffset: function (listIndex) {
+    return listIndex * LIST_WIDTH;
+  },
 
-    function getLeftOffset() {
-      return listIndex * LIST_WIDTH;
+  getListNameStyle: function (listIndex) {
+    return {
+      paddingLeft: 7 + "px",
+      position: "absolute",
+      top: 45 + "px",
+      left: this.getLeftOffset(listIndex) + "px",
+      width: LIST_WIDTH
     }
+  },
 
+  getListContentStyle: function (listIndex) {
     return {
       listStyle: "none",
       paddingLeft: 0,
@@ -2371,23 +2384,23 @@ module.exports = React.createClass({displayName: 'exports',
       textOverflow: "ellipsis",
       display: "inline-block",
       position: "absolute",
-      top: "45px",
+      top: 65 + "px",
       bottom: 0,
-      left: getLeftOffset() + "px",
+      left: this.getLeftOffset(listIndex) + "px",
       width: LIST_WIDTH
     }
   },
 
   getHeight: function() {
-    return this.getDOMNode().offsetHeight;
+    return this.refs.listContent.getDOMNode().offsetHeight;
   },
 
   getScrollTop: function() {
-    return this.getDOMNode().scrollTop;
+    return this.refs.listContent.getDOMNode().scrollTop;
   },
 
   setScrollTop: function(val) {
-    this.getDOMNode().scrollTop = val;
+    this.refs.listContent.getDOMNode().scrollTop = val;
   }
 });
 },{"./tab_item.jsx":10}],12:[function(require,module,exports){
@@ -2467,6 +2480,7 @@ module.exports = React.createClass({displayName: 'exports',
   },
 
   render: function() {
+    
     return (
       /* jshint ignore:start */
       React.DOM.div(null, 
@@ -2479,6 +2493,7 @@ module.exports = React.createClass({displayName: 'exports',
           closeSelected: this.closeSelected}), 
         TabList({
           listIndex: 0, 
+          name: "Open Tabs", 
           tabs: this.filteredTabs(), 
           filter: this.state.filter, 
           selectedTab: this.getSelected(), 
@@ -2487,14 +2502,7 @@ module.exports = React.createClass({displayName: 'exports',
           closeSelected: this.closeSelected}), 
         TabList({
           listIndex: 1, 
-          tabs: this.filteredTabs(), 
-          filter: this.state.filter, 
-          selectedTab: this.getSelected(), 
-          changeSelected: this.changeSelected, 
-          activateSelected: this.activateSelected, 
-          closeSelected: this.closeSelected}), 
-        TabList({
-          listIndex: 2, 
+          name: "Bookmarks", 
           tabs: this.filteredTabs(), 
           filter: this.state.filter, 
           selectedTab: this.getSelected(), 
@@ -2504,6 +2512,10 @@ module.exports = React.createClass({displayName: 'exports',
       )
       /* jshint ignore:end */
     );
+  },
+
+  getTabNames: function () {
+    return ["Open Tabs", "BookMarks"]
   },
 
   refreshTabs: function() {

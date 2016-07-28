@@ -31,6 +31,7 @@ module.exports = React.createClass({
   },
 
   render: function() {
+    
     return (
       /* jshint ignore:start */
       <div>
@@ -43,6 +44,7 @@ module.exports = React.createClass({
           closeSelected={this.closeSelected} />
         <TabList
           listIndex={0}
+          name="Open Tabs"
           tabs={this.filteredTabs()}
           filter={this.state.filter}
           selectedTab={this.getSelected()}
@@ -51,14 +53,7 @@ module.exports = React.createClass({
           closeSelected={this.closeSelected} />
         <TabList
           listIndex={1}
-          tabs={this.filteredTabs()}
-          filter={this.state.filter}
-          selectedTab={this.getSelected()}
-          changeSelected={this.changeSelected}
-          activateSelected={this.activateSelected}
-          closeSelected={this.closeSelected} />
-        <TabList
-          listIndex={2}
+          name="Bookmarks"
           tabs={this.filteredTabs()}
           filter={this.state.filter}
           selectedTab={this.getSelected()}
@@ -68,6 +63,10 @@ module.exports = React.createClass({
       </div>
       /* jshint ignore:end */
     );
+  },
+
+  getTabNames: function () {
+    return ["Open Tabs", "BookMarks"]
   },
 
   refreshTabs: function() {
