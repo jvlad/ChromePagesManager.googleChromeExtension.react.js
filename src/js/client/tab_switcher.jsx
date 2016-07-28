@@ -42,6 +42,23 @@ module.exports = React.createClass({
           modifySelected={this.modifySelected}
           closeSelected={this.closeSelected} />
         <TabList
+          listIndex={0}
+          tabs={this.filteredTabs()}
+          filter={this.state.filter}
+          selectedTab={this.getSelected()}
+          changeSelected={this.changeSelected}
+          activateSelected={this.activateSelected}
+          closeSelected={this.closeSelected} />
+        <TabList
+          listIndex={1}
+          tabs={this.filteredTabs()}
+          filter={this.state.filter}
+          selectedTab={this.getSelected()}
+          changeSelected={this.changeSelected}
+          activateSelected={this.activateSelected}
+          closeSelected={this.closeSelected} />
+        <TabList
+          listIndex={2}
           tabs={this.filteredTabs()}
           filter={this.state.filter}
           selectedTab={this.getSelected()}

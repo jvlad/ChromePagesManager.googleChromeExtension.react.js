@@ -1977,9 +1977,8 @@ var tabHistory = require('./background/tab_history')(chrome);
 var windowManager = require('./background/window_manager')(chrome);
 
 var PADDING_TOP = 50;
-var PADDING_BOTTOM = 50;
-var SWITCHER_WIDTH = 600;
-var SWITCHER_HEIGHT = 500;
+var SWITCHER_WIDTH = 1200;
+var SWITCHER_HEIGHT = 373;
 
 // Persist the tab history to local storage every minute.
 setInterval(function() {

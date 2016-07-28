@@ -2340,20 +2340,42 @@ module.exports = React.createClass({displayName: 'exports',
   render: function() {
     return (
       /* jshint ignore:start */
-      React.DOM.ul(null, 
-        this.props.tabs.map(function(tab, i) {
-          return TabItem({tab: tab, key: tab.id, filter: this.props.filter, 
-            selected: this.props.selectedTab === tab, 
-            changeSelected: this.props.changeSelected, 
-            activateSelected: this.props.activateSelected, 
-            closeSelected: this.props.closeSelected, 
-            containerScrollTop: this.getScrollTop(), 
-            containerHeight: this.getHeight(), 
-            setContainerScrollTop: this.setScrollTop});
-        }.bind(this))
-      )
+        React.DOM.ul({style: this.getStyle(this.props.listIndex)}, 
+          this.props.tabs.map(function(tab, i) {
+            return TabItem({tab: tab, key: tab.id, filter: this.props.filter, 
+              selected: this.props.selectedTab === tab, 
+              changeSelected: this.props.changeSelected, 
+              activateSelected: this.props.activateSelected, 
+              closeSelected: this.props.closeSelected, 
+              containerScrollTop: this.getScrollTop(), 
+              containerHeight: this.getHeight(), 
+              setContainerScrollTop: this.setScrollTop});
+          }.bind(this))
+        )
       /* jshint ignore:end */
     );
+  },
+
+  getStyle: function (listIndex) {
+    const LIST_WIDTH = 300;
+
+    function getLeftOffset() {
+      return listIndex * LIST_WIDTH;
+    }
+
+    return {
+      listStyle: "none",
+      paddingLeft: 0,
+      whiteSpace: "nowrap",
+      overflowX: "hidden",
+      textOverflow: "ellipsis",
+      display: "inline-block",
+      position: "absolute",
+      top: "45px",
+      bottom: 0,
+      left: getLeftOffset() + "px",
+      width: LIST_WIDTH
+    }
   },
 
   getHeight: function() {
@@ -2368,7 +2390,6 @@ module.exports = React.createClass({displayName: 'exports',
     this.getDOMNode().scrollTop = val;
   }
 });
-
 },{"./tab_item.jsx":10}],12:[function(require,module,exports){
 /** @jsx React.DOM */var KeybindMixin = require('./keybind_mixin');
 
@@ -2457,6 +2478,23 @@ module.exports = React.createClass({displayName: 'exports',
           modifySelected: this.modifySelected, 
           closeSelected: this.closeSelected}), 
         TabList({
+          listIndex: 0, 
+          tabs: this.filteredTabs(), 
+          filter: this.state.filter, 
+          selectedTab: this.getSelected(), 
+          changeSelected: this.changeSelected, 
+          activateSelected: this.activateSelected, 
+          closeSelected: this.closeSelected}), 
+        TabList({
+          listIndex: 1, 
+          tabs: this.filteredTabs(), 
+          filter: this.state.filter, 
+          selectedTab: this.getSelected(), 
+          changeSelected: this.changeSelected, 
+          activateSelected: this.activateSelected, 
+          closeSelected: this.closeSelected}), 
+        TabList({
+          listIndex: 2, 
           tabs: this.filteredTabs(), 
           filter: this.state.filter, 
           selectedTab: this.getSelected(), 
