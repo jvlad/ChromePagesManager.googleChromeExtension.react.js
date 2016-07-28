@@ -9,11 +9,12 @@ var StatusBar = require('./status_bar.jsx');
 module.exports = React.createClass({
   getInitialState: function() {
     // TODO: move into a model
+    const SEARCH_ALL_WINDOWS_BY_DEFAULT = true;
     var searchAllWindows = localStorage.getItem('searchAllWindows');
     try {
-      searchAllWindows = searchAllWindows ? JSON.parse(searchAllWindows) : false;
+      searchAllWindows = searchAllWindows ? JSON.parse(searchAllWindows) : SEARCH_ALL_WINDOWS_BY_DEFAULT;
     } catch (error) {
-      searchAllWindows = false;
+      searchAllWindows = SEARCH_ALL_WINDOWS_BY_DEFAULT;
     }
 
     return {
@@ -47,9 +48,6 @@ module.exports = React.createClass({
           changeSelected={this.changeSelected}
           activateSelected={this.activateSelected}
           closeSelected={this.closeSelected} />
-        <StatusBar
-          searchAllWindows={this.state.searchAllWindows}
-          changeSearchAllWindows={this.changeSearchAllWindows} />
       </div>
       /* jshint ignore:end */
     );

@@ -5,6 +5,7 @@ var windowManager = require('./background/window_manager')(chrome);
 var PADDING_TOP = 50;
 var PADDING_BOTTOM = 50;
 var SWITCHER_WIDTH = 600;
+var SWITCHER_HEIGHT = 500;
 
 // Persist the tab history to local storage every minute.
 setInterval(function() {
@@ -53,7 +54,7 @@ chrome.commands.onCommand.addListener(function(command) {
       var left = currentWindow.left +
         Math.round((currentWindow.width - SWITCHER_WIDTH) / 2);
       var top = currentWindow.top + PADDING_TOP;
-      var height = Math.max(currentWindow.height - PADDING_TOP - PADDING_BOTTOM, 600);
+      var height = SWITCHER_HEIGHT;
       var width = SWITCHER_WIDTH;
 
       windowManager.showSwitcher(width, height, left, top);
