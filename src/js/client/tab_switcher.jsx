@@ -79,6 +79,7 @@ module.exports = React.createClass({
   },
 
   close: function() {
-    window.close();
+    //todo uncomment
+    // window.close();
   }
 });

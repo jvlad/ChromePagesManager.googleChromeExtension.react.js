@@ -3,21 +3,19 @@ var tabBroker = require('./tab_broker')(chrome);
 var stringScore = require('../../../lib/string_score');
 var tabFilter = require('./tab_filter')(stringScore);
 
+// todo consider to refactor
 const LIST_WIDTH = 300;
 
 module.exports = React.createClass({
   getInitialState: function() {
+    console.log("getInitialState");
     return {
       tabs: []
     }
   },
-
-  componentDidMount: function() {
-    this.refreshTabs();
-    this.setState({tabs: this.filteredTabs()});
-  },
   
   render: function() {
+    var tabsToRender = this.filteredTabs();
     return (
       /* jshint ignore:start */
       <div>
@@ -26,7 +24,7 @@ module.exports = React.createClass({
 
         <ul ref='listContent'
             style={this.getListContentStyle(this.props.listIndex)}>
-            {this.state.tabs.map(function(tab, i) {
+            {tabsToRender.map(function(tab, i) {
               return <TabItem
                 tab={tab}
                 key={tab.id}
@@ -45,10 +43,16 @@ module.exports = React.createClass({
     );
   },
 
+  componentDidMount: function () {
+    console.log("componentDidMount");
+    this.refreshTabs();
+  },
+
   refreshTabs: function() {
+    console.log("refreshTabs");
     tabBroker.query(this.props.searchAllWindows)
       .then(function(tabs) {
-        this.setState({tabs: tabs, selected: null});
+        this.setState({tabs: tabs});
       }.bind(this));
   },
 
@@ -56,8 +60,10 @@ module.exports = React.createClass({
   // it in the state because it is very much fast enough, and
   // simplifies some race-y areas of the component's lifecycle.
   filteredTabs: function() {
-    if (this.props.filter.trim().length) {
-      return tabFilter(this.state.filter, this.state.tabs)
+    var filter = this.props.filter;
+    console.log("filteredTabs. filter: " + filter);
+    if (filter.trim().length) {
+      return tabFilter(filter, this.state.tabs)
         .map(function(result) {
           return result.tab;
         });

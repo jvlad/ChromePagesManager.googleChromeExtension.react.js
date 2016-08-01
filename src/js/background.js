@@ -2,9 +2,10 @@ var Q = require('q');
 var tabHistory = require('./background/tab_history')(chrome);
 var windowManager = require('./background/window_manager')(chrome);
 
-var PADDING_TOP = 50;
 var SWITCHER_WIDTH = 1200;
 var SWITCHER_HEIGHT = 393;
+var SWITCHER_LEFT = 20;
+var SWITCHER_TOP = 60
 
 // Persist the tab history to local storage every minute.
 setInterval(function() {
@@ -50,13 +51,7 @@ chrome.commands.onCommand.addListener(function(command) {
       // in all windows" enabled, we need to know which was the last
       // non-switcher window that was active.
       windowManager.setLastWindowId(currentWindow.id);
-      var left = currentWindow.left +
-        Math.round((currentWindow.width - SWITCHER_WIDTH) / 2);
-      var top = currentWindow.top + PADDING_TOP;
-      var height = SWITCHER_HEIGHT;
-      var width = SWITCHER_WIDTH;
-
-      windowManager.showSwitcher(width, height, left, top);
+      windowManager.showSwitcher(SWITCHER_WIDTH, SWITCHER_HEIGHT, SWITCHER_LEFT, SWITCHER_TOP);
     });
   }
 });
