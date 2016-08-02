@@ -1975,8 +1975,9 @@ process.chdir = function (dir) {
 var Q = require('q');
 var tabHistory = require('./background/tab_history')(chrome);
 var windowManager = require('./background/window_manager')(chrome);
+var util = require('./util');
 
-var SWITCHER_WIDTH = 1200;
+var SWITCHER_WIDTH = 600;
 var SWITCHER_HEIGHT = 393;
 var SWITCHER_LEFT = 20;
 var SWITCHER_TOP = 60
@@ -2025,6 +2026,8 @@ chrome.commands.onCommand.addListener(function(command) {
       // in all windows" enabled, we need to know which was the last
       // non-switcher window that was active.
       windowManager.setLastWindowId(currentWindow.id);
+
+      //todo test how window is positioned if (SWITCHER_LEFT > 1st screen width)
       windowManager.showSwitcher(SWITCHER_WIDTH, SWITCHER_HEIGHT, SWITCHER_LEFT, SWITCHER_TOP);
     });
   }
@@ -2035,9 +2038,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, respond) {
     windowManager.switchToTab(request.switchToTabId);
   }
 
-  if (request.sendTabData) {
+  if(request.sendTabData){
     Q.all([tabHistory.getRecentTabs(), windowManager.getLastWindowId()])
     .spread(function(recentTabs, lastWindowId) {
+      //todo lastWindowId may be removed according to decision cut off the feature of searching tabs in the activeChromeWindow only 
       return windowManager.queryTabs(sender.tab.id, request.searchAllWindows,
                                      recentTabs, lastWindowId);
     }).then(function(data) {
@@ -2048,12 +2052,23 @@ chrome.runtime.onMessage.addListener(function(request, sender, respond) {
     return true;
   }
 
+  if (request.isBookmarksRequested){
+    var options = {};
+    //todo implement bookmarks request, not tabs request
+    util.pcall(chrome.tabs.query, options)
+      .then(function(bookmarks) {
+        respond(null);
+      });
+
+    return true;
+  }
+
   if (request.closeTabId) {
     windowManager.closeTab(request.closeTabId);
   }
 });
 
-},{"./background/tab_history":4,"./background/window_manager":5,"q":1}],4:[function(require,module,exports){
+},{"./background/tab_history":4,"./background/window_manager":5,"./util":6,"q":1}],4:[function(require,module,exports){
 var Q = require('q');
 var util = require('../util');
 
@@ -2101,6 +2116,7 @@ module.exports = function(chrome) {
       return recentTabs;
     },
 
+    //todo rename to addRecentTabId. Type of <Tab> are not equal to type of <Tab.id>, the function's name semantic is broken
     addRecentTab: function(windowId, tabId, skipIfAlreadyRecent) {
       return this.getRecentTabs().then(function(tabs) {
         if (!tabs[windowId]) tabs[windowId] = [null];
@@ -2167,7 +2183,9 @@ module.exports = function(chrome) {
     },
 
     showSwitcher: function(width, height, left, top) {
+      // todo remove test line
       console.log("showSwitcher. left: " + left + " top: " + top);
+
       var opts = {
         width: width,
         height: height,

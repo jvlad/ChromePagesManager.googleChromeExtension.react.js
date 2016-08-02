@@ -1,4 +1,5 @@
-var tabBroker = require('./tab_broker')(chrome);
+var tabProvider = require('./tab_broker')(chrome);
+var bookmarkProvider = require('./bookmark_provider')(chrome);
 
 var TabSearchBox = require('./tab_search_box.jsx');
 var TabList = require('./tab_list.jsx');
@@ -7,19 +8,13 @@ var StatusBar = require('./status_bar.jsx');
 module.exports = React.createClass({
   getInitialState: function() {
     // TODO: move into a model
-    const SEARCH_ALL_WINDOWS_BY_DEFAULT = true;
-    var searchAllWindows = localStorage.getItem('searchAllWindows');
-    try {
-      searchAllWindows = searchAllWindows ? JSON.parse(searchAllWindows) : SEARCH_ALL_WINDOWS_BY_DEFAULT;
-    } catch (error) {
-      searchAllWindows = SEARCH_ALL_WINDOWS_BY_DEFAULT;
-    }
+    const SEARCH_ALL_WINDOWS_DEFAULT = true;
 
     return {
       //todo if there is saved filterState in the local storage, selectAll (keep cursor next to the end of filter input string) in the input area on tabSwitcher invoked
       filter: '',
       selected: null,
-      searchAllWindows: searchAllWindows
+      searchAllWindows: SEARCH_ALL_WINDOWS_DEFAULT
     };
   },
 
@@ -40,6 +35,16 @@ module.exports = React.createClass({
         <TabList
           listIndex={0}
           name="Open Tabs"
+          tabProvider={tabProvider}
+          filter={this.state.filter}
+          selectedTab={this.getSelected()}
+          changeSelected={this.changeSelected}
+          activateSelected={this.activateSelected}
+          searchAllWindows={this.state.searchAllWindows}/>
+        <TabList
+          listIndex={1}
+          name="Bookmarks"
+          tabProvider={bookmarkProvider}
           filter={this.state.filter}
           selectedTab={this.getSelected()}
           changeSelected={this.changeSelected}
@@ -57,7 +62,7 @@ module.exports = React.createClass({
   activateSelected: function() {
     var selected = this.getSelected();
     if (selected) {
-      tabBroker.switchTo(selected);
+      chrome.runtime.sendMessage({switchToTabId: selected.id});
       this.close();
     }
   },

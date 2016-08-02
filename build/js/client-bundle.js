@@ -2087,7 +2087,26 @@ var TabSwitcher = require('./client/tab_switcher.jsx');
 React.renderComponent(TabSwitcher(null), document.getElementById('switcher'));
 /* jshint ignore:end */
 
-},{"./client/tab_switcher.jsx":13}],5:[function(require,module,exports){
+},{"./client/tab_switcher.jsx":14}],5:[function(require,module,exports){
+var util = require('../util');
+var tabListSample = require('../../../test/client/tabListSample');
+
+module.exports = function (chrome) {
+  return {
+    query: function (searchAllWindows) {
+      var opts = {
+        isBookmarksRequested: true
+      };
+      var fn = chrome.runtime.sendMessage.bind(chrome.runtime);
+
+      return util.pcall(fn, opts).then(function (data) {
+        return tabListSample.data;
+      });
+    }
+  };
+};
+
+},{"../../../test/client/tabListSample":16,"../util":15}],6:[function(require,module,exports){
 module.exports = {
   componentWillMount: function() {
     this._boundKeys = [];
@@ -2106,7 +2125,7 @@ module.exports = {
   }
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /** @jsx React.DOM */var KeybindMixin = require('./keybind_mixin');
 
 module.exports = React.createClass({displayName: 'exports',
@@ -2137,7 +2156,7 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"./keybind_mixin":5}],7:[function(require,module,exports){
+},{"./keybind_mixin":6}],8:[function(require,module,exports){
 var sections = function(haystack, needle, remaining, acc, offset) {
   if (!acc) acc = [];
   if (!remaining) remaining = "";
@@ -2184,13 +2203,10 @@ module.exports = function(haystack, needle, pre, post) {
   return result;
 };
 
-},{}],8:[function(require,module,exports){
-var Q = require('q');
+},{}],9:[function(require,module,exports){
 var util = require('../util');
 
 module.exports = function(chrome) {
-  var responses = {};
-
   return {
     query: function(searchAllWindows) {
       var opts = {
@@ -2201,6 +2217,7 @@ module.exports = function(chrome) {
 
       return util.pcall(fn, opts).then(function(data) {
         var tabs = data.tabs;
+        //todo rename to lastActiveTabId. Type of <Tab> are not equal to type of <Tab.id>, the function's name semantic is broken
         var lastActive = data.lastActive;
 
         var firstTab = [];
@@ -2214,19 +2231,11 @@ module.exports = function(chrome) {
 
         return firstTab.concat(otherTabs);
       });
-    },
-
-    switchTo: function(tab) {
-      chrome.runtime.sendMessage({switchToTabId: tab.id});
-    },
-
-    close: function(tab) {
-      chrome.runtime.sendMessage({closeTabId: tab.id});
     }
   };
 };
 
-},{"../util":14,"q":2}],9:[function(require,module,exports){
+},{"../util":15}],10:[function(require,module,exports){
 /**
  * A tab filter is simply a function that takes a string to filter
  * on and an array of tabs; it will determine if the tab title or URL
@@ -2257,7 +2266,7 @@ module.exports = function(scorer) {
   };
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /** @jsx React.DOM */var stringSpanner = require('./string_spanner');
 
 var MATCH_START = '<span class="match">';
@@ -2333,9 +2342,8 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"./string_spanner":7}],11:[function(require,module,exports){
+},{"./string_spanner":8}],12:[function(require,module,exports){
 /** @jsx React.DOM */var TabItem = require('./tab_item.jsx');
-var tabBroker = require('./tab_broker')(chrome);
 var stringScore = require('../../../lib/string_score');
 var tabFilter = require('./tab_filter')(stringScore);
 
@@ -2344,9 +2352,11 @@ const LIST_WIDTH = 300;
 
 module.exports = React.createClass({displayName: 'exports',
   getInitialState: function() {
-    console.log("getInitialState");
+    //todo remove test line
+    console.log("getInitialState " + this.props.listIndex);
     return {
-      tabs: []
+      tabs: [],
+      tabProvider: null
     }
   },
   
@@ -2380,15 +2390,18 @@ module.exports = React.createClass({displayName: 'exports',
   },
 
   componentDidMount: function () {
-    console.log("componentDidMount");
+    //todo remove test line
+    console.log("componentDidMount: " + this.props.listIndex);
     this.refreshTabs();
   },
 
   refreshTabs: function() {
-    console.log("refreshTabs");
-    tabBroker.query(this.props.searchAllWindows)
+    //todo remove test line
+    console.log("refreshTabs " + this.props.listIndex);
+    this.props.tabProvider.query(this.props.searchAllWindows)
       .then(function(tabs) {
         this.setState({tabs: tabs});
+        console.log(tabs);
       }.bind(this));
   },
 
@@ -2397,7 +2410,6 @@ module.exports = React.createClass({displayName: 'exports',
   // simplifies some race-y areas of the component's lifecycle.
   filteredTabs: function() {
     var filter = this.props.filter;
-    console.log("filteredTabs. filter: " + filter);
     if (filter.trim().length) {
       return tabFilter(filter, this.state.tabs)
         .map(function(result) {
@@ -2462,7 +2474,7 @@ module.exports = React.createClass({displayName: 'exports',
     this.refs.listContent.getDOMNode().scrollTop = val;
   }
 });
-},{"../../../lib/string_score":1,"./tab_broker":8,"./tab_filter":9,"./tab_item.jsx":10}],12:[function(require,module,exports){
+},{"../../../lib/string_score":1,"./tab_filter":10,"./tab_item.jsx":11}],13:[function(require,module,exports){
 /** @jsx React.DOM */var KeybindMixin = require('./keybind_mixin');
 
 module.exports = React.createClass({displayName: 'exports',
@@ -2505,8 +2517,9 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"./keybind_mixin":5}],13:[function(require,module,exports){
-/** @jsx React.DOM */var tabBroker = require('./tab_broker')(chrome);
+},{"./keybind_mixin":6}],14:[function(require,module,exports){
+/** @jsx React.DOM */var tabProvider = require('./tab_broker')(chrome);
+var bookmarkProvider = require('./bookmark_provider')(chrome);
 
 var TabSearchBox = require('./tab_search_box.jsx');
 var TabList = require('./tab_list.jsx');
@@ -2515,19 +2528,13 @@ var StatusBar = require('./status_bar.jsx');
 module.exports = React.createClass({displayName: 'exports',
   getInitialState: function() {
     // TODO: move into a model
-    const SEARCH_ALL_WINDOWS_BY_DEFAULT = true;
-    var searchAllWindows = localStorage.getItem('searchAllWindows');
-    try {
-      searchAllWindows = searchAllWindows ? JSON.parse(searchAllWindows) : SEARCH_ALL_WINDOWS_BY_DEFAULT;
-    } catch (error) {
-      searchAllWindows = SEARCH_ALL_WINDOWS_BY_DEFAULT;
-    }
+    const SEARCH_ALL_WINDOWS_DEFAULT = true;
 
     return {
       //todo if there is saved filterState in the local storage, selectAll (keep cursor next to the end of filter input string) in the input area on tabSwitcher invoked
       filter: '',
       selected: null,
-      searchAllWindows: searchAllWindows
+      searchAllWindows: SEARCH_ALL_WINDOWS_DEFAULT
     };
   },
 
@@ -2548,6 +2555,16 @@ module.exports = React.createClass({displayName: 'exports',
         TabList({
           listIndex: 0, 
           name: "Open Tabs", 
+          tabProvider: tabProvider, 
+          filter: this.state.filter, 
+          selectedTab: this.getSelected(), 
+          changeSelected: this.changeSelected, 
+          activateSelected: this.activateSelected, 
+          searchAllWindows: this.state.searchAllWindows}), 
+        TabList({
+          listIndex: 1, 
+          name: "Bookmarks", 
+          tabProvider: bookmarkProvider, 
           filter: this.state.filter, 
           selectedTab: this.getSelected(), 
           changeSelected: this.changeSelected, 
@@ -2565,7 +2582,7 @@ module.exports = React.createClass({displayName: 'exports',
   activateSelected: function() {
     var selected = this.getSelected();
     if (selected) {
-      tabBroker.switchTo(selected);
+      chrome.runtime.sendMessage({switchToTabId: selected.id});
       this.close();
     }
   },
@@ -2592,7 +2609,7 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"./status_bar.jsx":6,"./tab_broker":8,"./tab_list.jsx":11,"./tab_search_box.jsx":12}],14:[function(require,module,exports){
+},{"./bookmark_provider":5,"./status_bar.jsx":7,"./tab_broker":9,"./tab_list.jsx":12,"./tab_search_box.jsx":13}],15:[function(require,module,exports){
 var Q = require('q');
 
 module.exports = {
@@ -2611,4 +2628,117 @@ module.exports = {
   }
 };
 
-},{"q":2}]},{},[4])
+},{"q":2}],16:[function(require,module,exports){
+module.exports = {
+  data: [
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 0,
+      incognito: false,
+      index: 0,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "qwer",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    },
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 1,
+      incognito: false,
+      index: 1,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "asdf",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    },
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 2,
+      incognito: false,
+      index: 2,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "qwer1",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    },
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 3,
+      incognito: false,
+      index: 3,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "asdf1",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    },
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 4,
+      incognito: false,
+      index: 4,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "qwer2",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    },
+    {
+      active: false,
+      audible: false,
+      favIconUrl: "",
+      height: 683,
+      highlighted: false,
+      id: 5,
+      incognito: false,
+      index: 5,
+      mutedInfo: Object,
+      pinned: false,
+      selected: false,
+      status: "complete",
+      title: "asdf2",
+      url: "chrome://bookmarks/#1",
+      width: 1366,
+      windowId: 1
+    }
+  ]
+};
+},{}]},{},[4])

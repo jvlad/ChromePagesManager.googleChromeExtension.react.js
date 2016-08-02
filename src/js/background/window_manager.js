@@ -33,7 +33,9 @@ module.exports = function(chrome) {
     },
 
     showSwitcher: function(width, height, left, top) {
+      // todo remove test line
       console.log("showSwitcher. left: " + left + " top: " + top);
+
       var opts = {
         width: width,
         height: height,

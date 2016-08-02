@@ -45,6 +45,7 @@ module.exports = function(chrome) {
       return recentTabs;
     },
 
+    //todo rename to addRecentTabId. Type of <Tab> are not equal to type of <Tab.id>, the function's name semantic is broken
     addRecentTab: function(windowId, tabId, skipIfAlreadyRecent) {
       return this.getRecentTabs().then(function(tabs) {
         if (!tabs[windowId]) tabs[windowId] = [null];

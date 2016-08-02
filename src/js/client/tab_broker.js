@@ -1,9 +1,6 @@
-var Q = require('q');
 var util = require('../util');
 
 module.exports = function(chrome) {
-  var responses = {};
-
   return {
     query: function(searchAllWindows) {
       var opts = {
@@ -14,6 +11,7 @@ module.exports = function(chrome) {
 
       return util.pcall(fn, opts).then(function(data) {
         var tabs = data.tabs;
+        //todo rename to lastActiveTabId. Type of <Tab> are not equal to type of <Tab.id>, the function's name semantic is broken
         var lastActive = data.lastActive;
 
         var firstTab = [];
@@ -27,14 +25,6 @@ module.exports = function(chrome) {
 
         return firstTab.concat(otherTabs);
       });
-    },
-
-    switchTo: function(tab) {
-      chrome.runtime.sendMessage({switchToTabId: tab.id});
-    },
-
-    close: function(tab) {
-      chrome.runtime.sendMessage({closeTabId: tab.id});
     }
   };
 };

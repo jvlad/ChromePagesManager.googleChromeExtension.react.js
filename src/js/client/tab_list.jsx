@@ -1,5 +1,4 @@
 var TabItem = require('./tab_item.jsx');
-var tabBroker = require('./tab_broker')(chrome);
 var stringScore = require('../../../lib/string_score');
 var tabFilter = require('./tab_filter')(stringScore);
 
@@ -8,9 +7,11 @@ const LIST_WIDTH = 300;
 
 module.exports = React.createClass({
   getInitialState: function() {
-    console.log("getInitialState");
+    //todo remove test line
+    console.log("getInitialState " + this.props.listIndex);
     return {
-      tabs: []
+      tabs: [],
+      tabProvider: null
     }
   },
   
@@ -44,15 +45,18 @@ module.exports = React.createClass({
   },
 
   componentDidMount: function () {
-    console.log("componentDidMount");
+    //todo remove test line
+    console.log("componentDidMount: " + this.props.listIndex);
     this.refreshTabs();
   },
 
   refreshTabs: function() {
-    console.log("refreshTabs");
-    tabBroker.query(this.props.searchAllWindows)
+    //todo remove test line
+    console.log("refreshTabs " + this.props.listIndex);
+    this.props.tabProvider.query(this.props.searchAllWindows)
       .then(function(tabs) {
         this.setState({tabs: tabs});
+        console.log(tabs);
       }.bind(this));
   },
 
@@ -61,7 +65,6 @@ module.exports = React.createClass({
   // simplifies some race-y areas of the component's lifecycle.
   filteredTabs: function() {
     var filter = this.props.filter;
-    console.log("filteredTabs. filter: " + filter);
     if (filter.trim().length) {
       return tabFilter(filter, this.state.tabs)
         .map(function(result) {
