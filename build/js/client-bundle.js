@@ -2080,6 +2080,20 @@ process.chdir = function (dir) {
 };
 
 },{}],4:[function(require,module,exports){
+var util = require('../util');
+
+module.exports = function (chrome) {
+  return {
+    query: function (searchAllWindows) {
+      return util.pcall(chrome.bookmarks.getRecent.bind(chrome.bookmarks), 20)
+        .then(function (bookmarks) {
+          return (bookmarks);
+        });
+    }
+  };
+};
+
+},{"../util":15}],5:[function(require,module,exports){
 /** @jsx React.DOM */Mousetrap.stopCallback = function() { return false; };
 var TabSwitcher = require('./client/tab_switcher.jsx');
 
@@ -2087,26 +2101,7 @@ var TabSwitcher = require('./client/tab_switcher.jsx');
 React.renderComponent(TabSwitcher(null), document.getElementById('switcher'));
 /* jshint ignore:end */
 
-},{"./client/tab_switcher.jsx":14}],5:[function(require,module,exports){
-var util = require('../util');
-var tabListSample = require('../../../test/client/tabListSample');
-
-module.exports = function (chrome) {
-  return {
-    query: function (searchAllWindows) {
-      var opts = {
-        isBookmarksRequested: true
-      };
-      var fn = chrome.runtime.sendMessage.bind(chrome.runtime);
-
-      return util.pcall(fn, opts).then(function (data) {
-        return tabListSample.data;
-      });
-    }
-  };
-};
-
-},{"../../../test/client/tabListSample":16,"../util":15}],6:[function(require,module,exports){
+},{"./client/tab_switcher.jsx":14}],6:[function(require,module,exports){
 module.exports = {
   componentWillMount: function() {
     this._boundKeys = [];
@@ -2519,7 +2514,7 @@ module.exports = React.createClass({displayName: 'exports',
 
 },{"./keybind_mixin":6}],14:[function(require,module,exports){
 /** @jsx React.DOM */var tabProvider = require('./tab_broker')(chrome);
-var bookmarkProvider = require('./bookmark_provider')(chrome);
+var bookmarkProvider = require('../background/bookmark_provider')(chrome);
 
 var TabSearchBox = require('./tab_search_box.jsx');
 var TabList = require('./tab_list.jsx');
@@ -2609,7 +2604,7 @@ module.exports = React.createClass({displayName: 'exports',
   }
 });
 
-},{"./bookmark_provider":5,"./status_bar.jsx":7,"./tab_broker":9,"./tab_list.jsx":12,"./tab_search_box.jsx":13}],15:[function(require,module,exports){
+},{"../background/bookmark_provider":4,"./status_bar.jsx":7,"./tab_broker":9,"./tab_list.jsx":12,"./tab_search_box.jsx":13}],15:[function(require,module,exports){
 var Q = require('q');
 
 module.exports = {
@@ -2628,117 +2623,4 @@ module.exports = {
   }
 };
 
-},{"q":2}],16:[function(require,module,exports){
-module.exports = {
-  data: [
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 0,
-      incognito: false,
-      index: 0,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "qwer",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    },
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 1,
-      incognito: false,
-      index: 1,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "asdf",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    },
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 2,
-      incognito: false,
-      index: 2,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "qwer1",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    },
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 3,
-      incognito: false,
-      index: 3,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "asdf1",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    },
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 4,
-      incognito: false,
-      index: 4,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "qwer2",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    },
-    {
-      active: false,
-      audible: false,
-      favIconUrl: "",
-      height: 683,
-      highlighted: false,
-      id: 5,
-      incognito: false,
-      index: 5,
-      mutedInfo: Object,
-      pinned: false,
-      selected: false,
-      status: "complete",
-      title: "asdf2",
-      url: "chrome://bookmarks/#1",
-      width: 1366,
-      windowId: 1
-    }
-  ]
-};
-},{}]},{},[4])
+},{"q":2}]},{},[5])

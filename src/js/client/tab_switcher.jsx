@@ -1,5 +1,5 @@
 var tabProvider = require('./tab_broker')(chrome);
-var bookmarkProvider = require('./bookmark_provider')(chrome);
+var bookmarkProvider = require('../background/bookmark_provider')(chrome);
 
 var TabSearchBox = require('./tab_search_box.jsx');
 var TabList = require('./tab_list.jsx');
