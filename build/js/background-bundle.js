@@ -2234,30 +2234,15 @@ module.exports = {
     return deferred.promise;
   },
 
-  createQueue: function () {
-    // todo remove line
-    console.log("function createQueue called");
-    return new Queue();
+  createQueue: function (initialItems) {
+    return new Queue(initialItems);
   }
 };
 
 function Queue(initialItems) {
-  // todo remove line
-  console.log("function Queue called");
-
-
   // initialize the queue and offset
-  // todo make private
-  this.queue = initialItems ? addInitialItems(initialItems) : [];
+  var queue = initialItems ? initialItems : [];
   var offset = 0;
-
-  function addInitialItems(itemList) {
-    console.log("addInitialItems called");
-    console.log(itemList);
-    itemList.forEach(function (item) {
-      this.enqueue(item);
-    }, this);
-  }
 
   // Returns the length of the queue.
   this.getLength = function () {
@@ -2278,7 +2263,7 @@ function Queue(initialItems) {
   };
 
   this.enqueueAll = function (itemList) {
-    itemList.forEach(function(item) {
+    itemList.forEach(function (item) {
       queue.push(item);
     }, this);
   };

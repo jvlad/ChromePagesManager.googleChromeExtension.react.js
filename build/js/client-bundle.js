@@ -2082,9 +2082,17 @@ process.chdir = function (dir) {
 },{}],4:[function(require,module,exports){
 var util = require('../util');
 
-
-
 module.exports = function (chrome) {
+  return {
+    query: function (searchAllWindows) {
+      return util.pcall(chrome.bookmarks.getTree.bind(chrome.bookmarks))
+        .then(function (bookmarksTree) {
+          var howManyBookmarks = countTreeLeaves(bookmarksTree);
+          return getRecentBookMarks(howManyBookmarks);
+        });
+    }
+  };
+
   function getRecentBookMarks(howManyBookmarks) {
     return util.pcall(chrome.bookmarks.getRecent.bind(chrome.bookmarks), howManyBookmarks)
       .then(function (bookmarks) {
@@ -2093,44 +2101,22 @@ module.exports = function (chrome) {
   };
 
   function countTreeLeaves(tree) {
-    // todo remove line
-    console.log(tree);
-    console.log("tree logged");
-
     var children = tree[0].children;
-    console.log(children);
-    console.log("children logged");
-
     if (!children) {
       return 1;
     }
-
     var numberOfLeaves = 0;
     var childrenQueue = util.createQueue(children);
-    // todo remove line
-    console.log("childrenQueue: ");
-    console.log(childrenQueue);
-    // while (childrenQueue.isEmpty()) {
-    //   var child = childrenQueue.dequeue();
-    //   if (child.children) {
-    //     childrenQueue.enqueueAll(child.children)
-    //   } else {
-    //     numberOfLeaves++;
-    //   }
-    // }
+    while (!childrenQueue.isEmpty()) {
+      var child = childrenQueue.dequeue();
+      if (child.children) {
+        childrenQueue.enqueueAll(child.children)
+      } else {
+        numberOfLeaves++;
+      }
+    }
     return numberOfLeaves;
   }
-
-  return {
-    query: function (searchAllWindows) {
-      //todo remove: current bookmarks number is 327 [Sun Aug  7 16:51:10 IDT 2016]
-      return util.pcall(chrome.bookmarks.getTree.bind(chrome.bookmarks))
-        .then(function (bookmarksTree) {
-          var howManyBookmarks = countTreeLeaves(bookmarksTree);
-          return getRecentBookMarks(3);
-        });
-    }
-  };
 };
 
 },{"../util":15}],5:[function(require,module,exports){
@@ -2655,30 +2641,15 @@ module.exports = {
     return deferred.promise;
   },
 
-  createQueue: function () {
-    // todo remove line
-    console.log("function createQueue called");
-    return new Queue();
+  createQueue: function (initialItems) {
+    return new Queue(initialItems);
   }
 };
 
 function Queue(initialItems) {
-  // todo remove line
-  console.log("function Queue called");
-
-
   // initialize the queue and offset
-  // todo make private
-  this.queue = initialItems ? addInitialItems(initialItems) : [];
+  var queue = initialItems ? initialItems : [];
   var offset = 0;
-
-  function addInitialItems(itemList) {
-    console.log("addInitialItems called");
-    console.log(itemList);
-    itemList.forEach(function (item) {
-      this.enqueue(item);
-    }, this);
-  }
 
   // Returns the length of the queue.
   this.getLength = function () {
@@ -2699,7 +2670,7 @@ function Queue(initialItems) {
   };
 
   this.enqueueAll = function (itemList) {
-    itemList.forEach(function(item) {
+    itemList.forEach(function (item) {
       queue.push(item);
     }, this);
   };
