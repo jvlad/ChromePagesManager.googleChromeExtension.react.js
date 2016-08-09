@@ -34,6 +34,7 @@ module.exports = React.createClass({
         />
         <TabList
           listIndex={0}
+          type="openTab"
           name="Open Tabs"
           tabProvider={tabProvider}
           filter={this.state.filter}
@@ -43,6 +44,7 @@ module.exports = React.createClass({
           searchAllWindows={this.state.searchAllWindows}/>
         <TabList
           listIndex={1}
+          type="bookmark"
           name="Bookmarks"
           tabProvider={bookmarkProvider}
           filter={this.state.filter}

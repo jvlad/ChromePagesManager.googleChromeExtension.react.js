@@ -2294,34 +2294,40 @@ var MATCH_START = '<span class="match">';
 var MATCH_END = '</span>';
 
 module.exports = React.createClass({displayName: 'exports',
-  render: function() {
+  render: function () {
     /* jshint ignore:start */
     var closeButton = this.props.selected ?
-      React.DOM.div({className: "close-button", onClick: this.onClickCloseButton}, "×") : null;
+      React.DOM.div({className: "close-button", onClick: this.onClickCloseButton}, "× ") : null;
 
     return (
       React.DOM.li({className: this.className(), 
         onClick: this.onClick, onMouseEnter: this.onMouseEnter}, 
         React.DOM.div(null, 
-          React.DOM.div({className: "bkg", style: this.iconBkg(this.props.tab)}), 
+          React.DOM.div({className: "bkg", ref: "favIcon"}), 
           React.DOM.span({className: "title", 
-            dangerouslySetInnerHTML: {__html: this.tabTitle(this.props.tab)}})
+            dangerouslySetInnerHTML: { __html: this.tabTitle(this.props.tab)}})
         ), 
         React.DOM.div({className: "url", 
-          dangerouslySetInnerHTML: {__html: this.tabUrl(this.props.tab)}}), 
+          dangerouslySetInnerHTML: { __html: this.tabUrl(this.props.tab)}}), 
         closeButton
       )
     );
     /* jshint ignore:end */
   },
 
-  componentDidUpdate: function() {
+  componentDidMount: function () {
+    var item = this.props.tab;
+    var type = this.props.type;
+    this.refs.favIcon.getDOMNode().style.backgroundImage = "url(" + this.getIconUrl(item, type) + ")";
+  },
+
+  componentDidUpdate: function () {
     if (this.props.selected) {
       this.ensureVisible();
     }
   },
 
-  ensureVisible: function() {
+  ensureVisible: function () {
     var node = this.getDOMNode();
     var myTop = node.offsetTop;
     var myBottom = myTop + node.offsetHeight;
@@ -2333,31 +2339,42 @@ module.exports = React.createClass({displayName: 'exports',
       this.props.setContainerScrollTop(containerScrollTop + myBottom - containerScrollBottom);
   },
 
-  iconBkg: function(tab) {
-    return {backgroundImage: "url(" + tab.favIconUrl + ")"};
+  getIconUrl: function (item, type) {
+    if (type === "openTab" && !isChromeInternalPage(item.favIconUrl)) {
+      return item.favIconUrl;
+    };
+    if (type === "bookmark" && !isChromeInternalPage(item.url)) {
+      return "https://www.google.com/s2/favicons?domain=" + item.url;
+    };
+    return "https://www.google.com/s2/favicons?domain=https://www.google.com/chrome"
+
+    function isChromeInternalPage(url){
+      var chromeInternalPageURLPrefix = "chrome://";
+      return url.substring(0, chromeInternalPageURLPrefix.length) === chromeInternalPageURLPrefix; 
+    }
   },
 
-  className: function() {
+  className: function () {
     return this.props.selected ? "selected" : "";
   },
 
-  tabTitle: function(tab) {
+  tabTitle: function (tab) {
     return stringSpanner(tab.title, this.props.filter, MATCH_START, MATCH_END);
   },
 
-  tabUrl: function(tab) {
+  tabUrl: function (tab) {
     return stringSpanner(tab.url, this.props.filter, MATCH_START, MATCH_END);
   },
 
-  onMouseEnter: function(evt) {
+  onMouseEnter: function (evt) {
     this.props.changeSelected(this.props.tab);
   },
 
-  onClick: function(evt) {
+  onClick: function (evt) {
     this.props.activateSelected();
   },
 
-  onClickCloseButton: function(evt) {
+  onClickCloseButton: function (evt) {
     evt.stopPropagation();
     this.props.closeSelected();
   }
@@ -2392,6 +2409,7 @@ module.exports = React.createClass({displayName: 'exports',
             tabsToRender.map(function(tab, i) {
               return TabItem({
                 tab: tab, 
+                type: this.props.type, 
                 key: tab.id, 
                 filter: this.props.filter, 
                 selected: this.props.selectedTab === tab, 
@@ -2568,6 +2586,7 @@ module.exports = React.createClass({displayName: 'exports',
         ), 
         TabList({
           listIndex: 0, 
+          type: "openTab", 
           name: "Open Tabs", 
           tabProvider: tabProvider, 
           filter: this.state.filter, 
@@ -2577,6 +2596,7 @@ module.exports = React.createClass({displayName: 'exports',
           searchAllWindows: this.state.searchAllWindows}), 
         TabList({
           listIndex: 1, 
+          type: "bookmark", 
           name: "Bookmarks", 
           tabProvider: bookmarkProvider, 
           filter: this.state.filter, 

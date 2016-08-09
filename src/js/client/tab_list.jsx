@@ -26,6 +26,7 @@ module.exports = React.createClass({
             {tabsToRender.map(function(tab, i) {
               return <TabItem
                 tab={tab}
+                type={this.props.type}
                 key={tab.id}
                 filter={this.props.filter}
                 selected={this.props.selectedTab === tab}
