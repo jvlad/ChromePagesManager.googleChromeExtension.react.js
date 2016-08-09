@@ -2082,12 +2082,52 @@ process.chdir = function (dir) {
 },{}],4:[function(require,module,exports){
 var util = require('../util');
 
+
+
 module.exports = function (chrome) {
+  function getRecentBookMarks(howManyBookmarks) {
+    return util.pcall(chrome.bookmarks.getRecent.bind(chrome.bookmarks), howManyBookmarks)
+      .then(function (bookmarks) {
+        return bookmarks;
+      })
+  };
+
+  function countTreeLeaves(tree) {
+    // todo remove line
+    console.log(tree);
+    console.log("tree logged");
+
+    var children = tree[0].children;
+    console.log(children);
+    console.log("children logged");
+
+    if (!children) {
+      return 1;
+    }
+
+    var numberOfLeaves = 0;
+    var childrenQueue = util.createQueue(children);
+    // todo remove line
+    console.log("childrenQueue: ");
+    console.log(childrenQueue);
+    // while (childrenQueue.isEmpty()) {
+    //   var child = childrenQueue.dequeue();
+    //   if (child.children) {
+    //     childrenQueue.enqueueAll(child.children)
+    //   } else {
+    //     numberOfLeaves++;
+    //   }
+    // }
+    return numberOfLeaves;
+  }
+
   return {
     query: function (searchAllWindows) {
-      return util.pcall(chrome.bookmarks.getRecent.bind(chrome.bookmarks), 20)
-        .then(function (bookmarks) {
-          return (bookmarks);
+      //todo remove: current bookmarks number is 327 [Sun Aug  7 16:51:10 IDT 2016]
+      return util.pcall(chrome.bookmarks.getTree.bind(chrome.bookmarks))
+        .then(function (bookmarksTree) {
+          var howManyBookmarks = countTreeLeaves(bookmarksTree);
+          return getRecentBookMarks(3);
         });
     }
   };
@@ -2347,8 +2387,6 @@ const LIST_WIDTH = 300;
 
 module.exports = React.createClass({displayName: 'exports',
   getInitialState: function() {
-    //todo remove test line
-    console.log("getInitialState " + this.props.listIndex);
     return {
       tabs: [],
       tabProvider: null
@@ -2356,7 +2394,7 @@ module.exports = React.createClass({displayName: 'exports',
   },
   
   render: function() {
-    var tabsToRender = this.filteredTabs();
+    var tabsToRender = this.filteredTabs();  
     return (
       /* jshint ignore:start */
       React.DOM.div(null, 
@@ -2385,18 +2423,13 @@ module.exports = React.createClass({displayName: 'exports',
   },
 
   componentDidMount: function () {
-    //todo remove test line
-    console.log("componentDidMount: " + this.props.listIndex);
     this.refreshTabs();
   },
 
   refreshTabs: function() {
-    //todo remove test line
-    console.log("refreshTabs " + this.props.listIndex);
     this.props.tabProvider.query(this.props.searchAllWindows)
       .then(function(tabs) {
         this.setState({tabs: tabs});
-        console.log(tabs);
       }.bind(this));
   },
 
@@ -2611,16 +2644,94 @@ module.exports = {
   // `pcall` takes a function that takes a set of arguments and
   // a callback (NON-Node.js style) and turns it into a promise
   // that gets resolved with the arguments to the callback.
-  pcall: function(fn) {
+  pcall: function (fn) {
     var deferred = Q.defer();
-    var callback = function() {
+    var callback = function () {
       deferred.resolve(Array.prototype.slice.call(arguments)[0]);
     };
     var newArgs = Array.prototype.slice.call(arguments, 1);
     newArgs.push(callback);
     fn.apply(null, newArgs);
     return deferred.promise;
+  },
+
+  createQueue: function () {
+    // todo remove line
+    console.log("function createQueue called");
+    return new Queue();
   }
 };
+
+function Queue(initialItems) {
+  // todo remove line
+  console.log("function Queue called");
+
+
+  // initialize the queue and offset
+  // todo make private
+  this.queue = initialItems ? addInitialItems(initialItems) : [];
+  var offset = 0;
+
+  function addInitialItems(itemList) {
+    console.log("addInitialItems called");
+    console.log(itemList);
+    itemList.forEach(function (item) {
+      this.enqueue(item);
+    }, this);
+  }
+
+  // Returns the length of the queue.
+  this.getLength = function () {
+    return (queue.length - offset);
+  };
+
+  // Returns true if the queue is empty, and false otherwise.
+  this.isEmpty = function () {
+    return (queue.length == 0);
+  };
+
+  /* Enqueues the specified item. The parameter is:
+   *
+   * item - the item to enqueue
+   */
+  this.enqueue = function (item) {
+    queue.push(item);
+  };
+
+  this.enqueueAll = function (itemList) {
+    itemList.forEach(function(item) {
+      queue.push(item);
+    }, this);
+  };
+
+  /* Dequeues an item and returns it. If the queue is empty, the value
+   * 'undefined' is returned.
+   */
+  this.dequeue = function () {
+
+    // if the queue is empty, return immediately
+    if (queue.length == 0) return undefined;
+
+    // store the item at the front of the queue
+    var item = queue[offset];
+
+    // increment the offset and remove the free space if necessary
+    if (++offset * 2 >= queue.length) {
+      queue = queue.slice(offset);
+      offset = 0;
+    }
+
+    // return the dequeued item
+    return item;
+
+  };
+
+  /* Returns the item at the front of the queue (without dequeuing it). If the
+   * queue is empty then undefined is returned.
+   */
+  this.peek = function () {
+    return (queue.length > 0 ? queue[offset] : undefined);
+  }
+}
 
 },{"q":2}]},{},[5])

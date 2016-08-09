@@ -7,8 +7,6 @@ const LIST_WIDTH = 300;
 
 module.exports = React.createClass({
   getInitialState: function() {
-    //todo remove test line
-    console.log("getInitialState " + this.props.listIndex);
     return {
       tabs: [],
       tabProvider: null
@@ -16,7 +14,7 @@ module.exports = React.createClass({
   },
   
   render: function() {
-    var tabsToRender = this.filteredTabs();
+    var tabsToRender = this.filteredTabs();  
     return (
       /* jshint ignore:start */
       <div>
@@ -45,18 +43,13 @@ module.exports = React.createClass({
   },
 
   componentDidMount: function () {
-    //todo remove test line
-    console.log("componentDidMount: " + this.props.listIndex);
     this.refreshTabs();
   },
 
   refreshTabs: function() {
-    //todo remove test line
-    console.log("refreshTabs " + this.props.listIndex);
     this.props.tabProvider.query(this.props.searchAllWindows)
       .then(function(tabs) {
         this.setState({tabs: tabs});
-        console.log(tabs);
       }.bind(this));
   },
 
